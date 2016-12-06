@@ -66,6 +66,7 @@ namespace JiraTogglSync.Services
 		public void AddWorkLog(WorkLogEntry entry)
 		{
 			_target.AddWorkLog(entry);
-		}
+            _source.SetWorkLogSynced(entry);
+        }
 	}
 }

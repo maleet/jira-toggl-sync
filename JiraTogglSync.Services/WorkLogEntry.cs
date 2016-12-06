@@ -10,8 +10,9 @@ namespace JiraTogglSync.Services
 		public DateTime Stop { get; set; }
 
 		public TimeSpan RoundedDuration { get; set; }
+	    public int? Id { get; set; }
 
-		public override string ToString()
+	    public override string ToString()
 		{
 			return string.Format("{0:d} - {1} - {2}", Start.Date, RoundedDuration, Description);
 		}

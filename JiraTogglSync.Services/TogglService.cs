@@ -7,9 +7,10 @@ using Toggl.Services;
 
 namespace JiraTogglSync.Services
 {
-	public class TogglService : IWorksheetSourceService
+    public class TogglService : IWorksheetSourceService
     {
         private readonly string _apiKey;
+        private string _syncedKey = "Jira-Synced";
 
         public TogglService(string apiKey)
         {
@@ -23,29 +24,45 @@ namespace JiraTogglSync.Services
             return string.Format("{0} ({1})", currentUser.FullName, currentUser.Email);
         }
 
-		public IEnumerable<WorkLogEntry> GetEntries(DateTime startDate, DateTime endDate)
-		{
-			var timeEntryService = new TimeEntryService(_apiKey);
+        public IEnumerable<WorkLogEntry> GetEntries(DateTime startDate, DateTime endDate)
+        {
+            var timeEntryService = new TimeEntryService(_apiKey);
 
-			var hours = timeEntryService
-				.List(new TimeEntryParams
-					{
-						StartDate = startDate,
-						EndDate = endDate
-					})
-				.Where(w => !string.IsNullOrEmpty(w.Description) && w.Stop != null);
+            var hours = timeEntryService
+                .List(new TimeEntryParams
+                {
+                    StartDate = startDate,
+                    EndDate = endDate,
+                })
+                .Where(entry => entry.TagNames == null || !entry.TagNames.Contains(_syncedKey))
+                .Where(w => !string.IsNullOrEmpty(w.Description) && w.Stop != null);
 
-			return hours.Select(ToWorkLogEntry);
-		}
+            return hours.Select(ToWorkLogEntry);
+        }
 
-		private static WorkLogEntry ToWorkLogEntry(TimeEntry arg)
-		{
-			return new WorkLogEntry
-				{
-					Start = DateTime.Parse(arg.Start),
-					Stop = DateTime.Parse(arg.Stop),
-					Description = arg.Description
-				};
-		}
+        public void SetWorkLogSynced(WorkLogEntry entry)
+        {
+            var timeEntryService = new TimeEntryService(_apiKey);
+
+            var timeEntry = timeEntryService.Get(entry.Id.Value);
+
+            if (!timeEntry.TagNames.Contains(_syncedKey))
+            {
+                timeEntry.TagNames.Add(_syncedKey);
+            }
+
+            timeEntryService.Edit(timeEntry);
+        }
+
+        private static WorkLogEntry ToWorkLogEntry(TimeEntry arg)
+        {
+            return new WorkLogEntry
+            {
+                Start = DateTime.Parse(arg.Start),
+                Stop = DateTime.Parse(arg.Stop),
+                Description = arg.Description,
+                Id = arg.Id
+            };
+        }
     }
 }
