@@ -46,6 +46,11 @@ namespace JiraTogglSync.Services
 
             var timeEntry = timeEntryService.Get(entry.Id.Value);
 
+            if (timeEntry.TagNames == null)
+            {
+                timeEntry.TagNames = new List<string>();
+            }
+
             if (!timeEntry.TagNames.Contains(_syncedKey))
             {
                 timeEntry.TagNames.Add(_syncedKey);

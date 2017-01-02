@@ -21,19 +21,42 @@ namespace JiraTogglSync.CommandLine
             var jira = new JiraRestService(jiraInstance, jiraUsername, jiraPassword, jiraWorklogStrategy);
             Console.WriteLine("JIRA: Connected as {0}", jira.GetUserInformation());
 
-            var syncDays = int.Parse(ConfigurationHelper.GetValueFromConfig("syncDays", () => AskFor("Sync how many days")));
+            DateTime? fromDate = null;
+            DateTime parsedFromDate;
+            if (DateTime.TryParse(ConfigurationHelper.GetValueFromConfig("syncFrom", () => AskFor("Sync from date")),
+                out parsedFromDate))
+            {
+                fromDate = parsedFromDate;
+            }
+            DateTime? toDate = null;
+            DateTime parsedToDate;
+            if (DateTime.TryParse(ConfigurationHelper.GetValueFromConfig("syncTo", () => AskFor("Sync to date")), out parsedToDate))
+            {
+                toDate = parsedToDate;
+            }
+
+            if (fromDate == null)
+            {
+                var syncDays = int.Parse(ConfigurationHelper.GetValueFromConfig("syncDays", () => AskFor("Sync how many days")));
+                fromDate = DateTime.Now.Date.AddDays(-syncDays);
+            }
+            if (toDate == null)
+            {
+                toDate = DateTime.Now.Date.AddDays(1);
+            }
+
             var roundingToMinutes = int.Parse(ConfigurationHelper.GetValueFromConfig("roundingToMinutes", () => AskFor("Round duration to X minutes")));
 
             var sync = new WorksheetSyncService(toggl, jira, jiraKeyPrefixes.Split(','));
-
-            var suggestions = sync.GetSuggestions(DateTime.Now.Date.AddDays(-syncDays), DateTime.Now.Date.AddDays(1)).ToList();
+            
+            var suggestions = sync.GetSuggestions(fromDate.Value, toDate.Value).ToList();
             suggestions.ForEach(x => x.WorkLog.ForEach(y => y.Round(roundingToMinutes)));
 
             if (!suggestions.Any())
             {
                 Console.Write("No entries to sync");
             }
-            foreach (var issue in suggestions)
+            foreach (var issue in suggestions.OrderBy(entry => entry.WorkLog.First().Start))
             {
                 var issueTitle = issue.ToString();
                 Console.WriteLine(issueTitle);
@@ -50,6 +73,7 @@ namespace JiraTogglSync.CommandLine
                     Console.WriteLine();
                 }
             }
+            Console.WriteLine($"Synced from {fromDate} to {toDate}");
             Console.ReadLine();
         }
 
