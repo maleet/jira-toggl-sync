@@ -27,11 +27,21 @@ namespace JiraTogglSync.Services
 		public void AddWorkLog(WorkLogEntry entry)
 		{
 			var timeSpentSeconds = (int)entry.RoundedDuration.TotalSeconds;
-
-			_jira.CreateWorklog(new IssueRef {id = entry.IssueKey}, timeSpentSeconds, "", entry.Start);
+            _jira.CreateWorklog(new IssueRef {id = entry.IssueKey}, timeSpentSeconds, GetComment(entry.Tags), entry.Start);
 		}
 
-		private static Issue ConvertToIncident(Issue<IssueFields> issue)
+        private string GetComment(List<string> entryTags)
+        {
+            var result = "";
+            if (entryTags != null)
+            {
+                result = string.Join("\n", entryTags.Select(s => "* " + s));
+            }
+
+            return result;
+        }
+
+        private static Issue ConvertToIncident(Issue<IssueFields> issue)
 		{
 			return new Issue
 				{

@@ -66,6 +66,7 @@ namespace JiraTogglSync.Services
                 Start = DateTime.Parse(arg.Start),
                 Stop = DateTime.Parse(arg.Stop),
                 Description = arg.Description,
+                Tags = arg.TagNames,
                 Id = arg.Id
             };
         }

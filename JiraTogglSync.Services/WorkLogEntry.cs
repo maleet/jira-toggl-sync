@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace JiraTogglSync.Services
 {
@@ -11,6 +12,7 @@ namespace JiraTogglSync.Services
 
 		public TimeSpan RoundedDuration { get; set; }
 	    public int? Id { get; set; }
+	    public List<string> Tags { get; set; }
 
 	    public override string ToString()
 		{

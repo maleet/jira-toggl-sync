@@ -56,24 +56,28 @@ namespace JiraTogglSync.CommandLine
             {
                 Console.Write("No entries to sync");
             }
-            foreach (var issue in suggestions.OrderBy(entry => entry.WorkLog.First().Start))
+            else
             {
-                var issueTitle = issue.ToString();
-                Console.WriteLine(issueTitle);
-                Console.WriteLine(new String('=', issueTitle.Length));
-
-                foreach (var entry in issue.WorkLog.Where(entry => entry.RoundedDuration.Ticks > 0))
+                foreach (var issue in suggestions.OrderBy(entry => entry.WorkLog.First().Start))
                 {
-                    Console.Write(entry + " (y/n)");
-                    if (Console.ReadKey(true).KeyChar == 'y')
+                    var issueTitle = issue.ToString();
+                    Console.WriteLine(issueTitle);
+                    Console.WriteLine(new String('=', issueTitle.Length));
+
+                    foreach (var entry in issue.WorkLog.Where(entry => entry.RoundedDuration.Ticks > 0))
                     {
-                        sync.AddWorkLog(entry);
-                        Console.Write(" Done");
+                        Console.Write(entry + " (y/n)");
+                        if (Console.ReadKey(true).KeyChar == 'y')
+                        {
+                            sync.AddWorkLog(entry);
+                            Console.Write(" Done");
+                        }
+                        Console.WriteLine();
                     }
-                    Console.WriteLine();
                 }
+                Console.WriteLine($"Synced from {fromDate} to {toDate}");
             }
-            Console.WriteLine($"Synced from {fromDate} to {toDate}");
+            
             Console.ReadLine();
         }
 
