@@ -47,7 +47,9 @@ namespace JiraTogglSync.CommandLine
 
             var roundingToMinutes = int.Parse(ConfigurationHelper.GetValueFromConfig("roundingToMinutes", () => AskFor("Round duration to X minutes")));
 
-            var sync = new WorksheetSyncService(toggl, jira, jiraKeyPrefixes.Split(','));
+			string yesToAll = ConfigurationHelper.GetValueFromConfig("yesToAll", () => AskFor("Yes to all? (y/n)"));
+
+			var sync = new WorksheetSyncService(toggl, jira, jiraKeyPrefixes.Split(','));
             
             var suggestions = sync.GetSuggestions(fromDate.Value, toDate.Value).ToList();
             suggestions.ForEach(x => x.WorkLog.ForEach(y => y.Round(roundingToMinutes)));
@@ -66,6 +68,12 @@ namespace JiraTogglSync.CommandLine
 
                     foreach (var entry in issue.WorkLog.Where(entry => entry.RoundedDuration.Ticks > 0))
                     {
+	                    if (yesToAll == "y")
+	                    {
+							sync.AddWorkLog(entry);
+                            Console.WriteLine("Done");
+							continue;
+						}
                         Console.Write(entry + " (y/n)");
                         if (Console.ReadKey(true).KeyChar == 'y')
                         {
